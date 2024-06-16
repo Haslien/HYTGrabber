@@ -4,6 +4,23 @@ from tkinter import ttk, filedialog, messagebox
 from yt_dlp import YoutubeDL
 from pytube import YouTube
 from PIL import Image, ImageTk
+import json
+
+SETTINGS_FILE = 'userdata.json'
+
+def save_settings(save_path, filetype):
+    settings = {
+        'save_path': save_path,
+        'filetype': filetype
+    }
+    with open(SETTINGS_FILE, 'w') as f:
+        json.dump(settings, f)
+
+def load_settings():
+    if os.path.exists(SETTINGS_FILE):
+        with open(SETTINGS_FILE, 'r') as f:
+            return json.load(f)
+    return {'save_path': '', 'filetype': ''}
 
 def download_video(url, output_folder, output_format):
     if output_format in ['mp3', 'wav']:
@@ -58,6 +75,7 @@ def download():
     try:
         download_video(url, save_folder, format_choice)
         messagebox.showinfo("Success", f"The video has been successfully downloaded as {format_choice}.")
+        save_settings(save_folder, format_choice)
     except Exception as e:
         messagebox.showerror("Error", f"An error occurred during download:\n{str(e)}")
 
@@ -66,10 +84,16 @@ def browse_folder():
     if folder_path:
         folder_entry.delete(0, tk.END)
         folder_entry.insert(0, folder_path)
+        save_settings(folder_path, format_var.get())
 
 def open_website():
     import webbrowser
     webbrowser.open("http://www.mathias-haslien.no")
+
+def init_ui():
+    settings = load_settings()
+    folder_entry.insert(0, settings['save_path'])
+    format_var.set(settings['filetype'])
 
 root = tk.Tk()
 root.title("Hassy's YTGrabber")
@@ -127,5 +151,7 @@ button = tk.Button(root, text="www.mathias-haslien.no", font=('Arial', 12), fg='
 # Position the button at the bottom right corner
 button.place(relx=1.0, rely=1.0, anchor='se')
 
+# Initialize UI with loaded settings
+init_ui()
 
 root.mainloop()
